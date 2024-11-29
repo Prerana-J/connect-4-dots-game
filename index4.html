@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: url('b3.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Arial', sans-serif;
+            color: #ecf0f1;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 48px;
+            background-color: rgba(43, 110, 113, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(7, 80px);
+            grid-template-rows: repeat(6, 80px);
+            gap: 10px;
+            background-color: rgba(52, 73, 94, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            background-color: #ecf0f1;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cell:hover {
+            background-color: #bdc3c7;
+        }
+
+        .cell.green {
+            background-color: #00ff22;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell.purple {
+            background-color: #ff00ff;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 24px;
+            background-color: rgba(52, 73, 94, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect 4</h1>
+    <div id="game-board"></div>
+    <div id="status">Current Player: GREEN</div>
+    <script>
+        const columns = 7;
+        const rows = 6;
+        let currentPlayer = 'green';
+        let board = Array.from({ length: rows }, () => Array(columns).fill(null));
+        let gameOver = false;
+
+        const gameBoard = document.getElementById('game-board');
+        const statusDisplay = document.getElementById('status');
+
+        function createBoard() {
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.column = c;
+                    cell.addEventListener('click', handleCellClick);
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(event) {
+            if (gameOver) return;
+
+            const column = event.target.dataset.column;
+            const emptyRow = getEmptyRow(column);
+
+            if (emptyRow !== -1) {
+                board[emptyRow][column] = currentPlayer;
+                updateBoard();
+
+                console.log(`Placed ${currentPlayer} at row ${emptyRow}, column ${column}`);
+                if (checkWin(emptyRow, column)) {
+                    statusDisplay.textContent = `${currentPlayer.toUpperCase()} wins!`;
+                    gameOver = true;
+                    console.log(`${currentPlayer.toUpperCase()} wins!`);
+                } else {
+                    currentPlayer = currentPlayer === 'green' ? 'purple' : 'green';
+                    statusDisplay.textContent = `Current Player: ${currentPlayer.toUpperCase()}`;
+                    console.log(`Next player: ${currentPlayer.toUpperCase()}`);
+                }
+            }
+        }
+
+        function getEmptyRow(column) {
+            for (let r = rows - 1; r >= 0; r--) {
+                if (!board[r][column]) {
+                    return r;
+                }
+            }
+            return -1;
+        }
+
+        function updateBoard() {
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    const cell = gameBoard.querySelector(`[data-row='${r}'][data-column='${c}']`);
+                    cell.classList.remove('green', 'purple');
+                    if (board[r][c]) {
+                        cell.classList.add(board[r][c]);
+                    }
+                }
+            }
+        }
+
+        function checkWin(row, col) {
+            return checkDirection(row, col, 1, 0) || // Horizontal
+                   checkDirection(row, col, 0, 1) || // Vertical
+                   checkDirection(row, col, 1, 1) || // Diagonal \
+                   checkDirection(row, col, 1, -1);  // Diagonal /
+        }
+
+        function checkDirection(row, col, rowIncrement, colIncrement) {
+            let count = 1;
+            let r = row + rowIncrement;
+            let c = col + colIncrement;
+            while (isValidCell(r, c) && board[r][c] === currentPlayer) {
+                count++;
+                r += rowIncrement;
+                c += colIncrement;
+            }
+
+            r = row - rowIncrement;
+            c = col - colIncrement;
+            while (isValidCell(r, c) && board[r][c] === currentPlayer) {
+                count++;
+                r -= rowIncrement;
+                c -= colIncrement;
+            }
+
+            return count >= 4;
+        }
+
+        function isValidCell(row, col) {
+            return row >= 0 && row < rows && col >= 0 && col < columns;
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
